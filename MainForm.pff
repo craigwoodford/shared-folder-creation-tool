@@ -1,0 +1,934 @@
+﻿
+  <FileID>5470f306-2093-47db-a8bc-648b76a30888</FileID>
+  <FileVersion>1.2</FileVersion>
+  <Object type="System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="MainForm" children="Controls">
+    <Property name="ClientSize">518, 357</Property>
+    <Property name="Name">MainForm</Property>
+    <Property name="StartPosition">CenterScreen</Property>
+    <Property name="Text">Shared Folder Creation Tool</Property>
+    <Event name="Load">OnLoadFormEvent</Event>
+    <Object type="System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="btnCreateSharedFolder" children="Controls">
+      <Property name="Location">385, 101</Property>
+      <Property name="Name">btnCreateSharedFolder</Property>
+      <Property name="Size">120, 23</Property>
+      <Property name="TabIndex">9</Property>
+      <Property name="Text">Create Shared Folder</Property>
+      <Property name="UseVisualStyleBackColor">True</Property>
+      <Event name="Click">btnCreateSharedFolder_Click</Event>
+    </Object>
+    <Object type="System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="txtOutput" children="Controls">
+      <Property name="Location">12, 132</Property>
+      <Property name="Multiline">True</Property>
+      <Property name="Name">txtOutput</Property>
+      <Property name="ReadOnly">True</Property>
+      <Property name="Size">494, 213</Property>
+      <Property name="TabIndex">10</Property>
+    </Object>
+    <Object type="System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="cmbUnit" children="Controls">
+      <Property name="DropDownStyle">DropDownList</Property>
+      <Property name="FormattingEnabled">True</Property>
+      <Property name="Location">118, 67</Property>
+      <Property name="Name">cmbUnit</Property>
+      <Property name="Size">225, 21</Property>
+      <Property name="TabIndex">6</Property>
+      <Event name="SelectedIndexChanged">cmbUnit_SelectedIndexChanged</Event>
+    </Object>
+    <Object type="System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="txtSubUnit" children="Controls">
+      <Property name="Location">118, 103</Property>
+      <Property name="Name">txtSubUnit</Property>
+      <Property name="Size">225, 20</Property>
+      <Property name="TabIndex">7</Property>
+    </Object>
+    <Object type="System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="txtFolderPath" children="Controls">
+      <Property name="Location">118, 35</Property>
+      <Property name="Name">txtFolderPath</Property>
+      <Property name="Size">225, 20</Property>
+      <Property name="TabIndex">5</Property>
+      <Event name="TextChanged">txtFolderPath_TextChanged</Event>
+    </Object>
+    <Object type="System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="txtFolderName" children="Controls">
+      <Property name="Location">118, 6</Property>
+      <Property name="Name">txtFolderName</Property>
+      <Property name="Size">225, 20</Property>
+      <Property name="TabIndex">4</Property>
+      <Event name="TextChanged">txtFolderName_TextChanged</Event>
+    </Object>
+    <Object type="System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="lblSubUnit" children="Controls">
+      <Property name="Location">12, 106</Property>
+      <Property name="Name">lblSubUnit</Property>
+      <Property name="Size">100, 23</Property>
+      <Property name="TabIndex">3</Property>
+      <Property name="Text">Sub-Unit:</Property>
+    </Object>
+    <Object type="System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="lblUnit" children="Controls">
+      <Property name="Location">12, 70</Property>
+      <Property name="Name">lblUnit</Property>
+      <Property name="Size">100, 23</Property>
+      <Property name="TabIndex">2</Property>
+      <Property name="Text">Unit:</Property>
+    </Object>
+    <Object type="System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="lblFolderPath" children="Controls">
+      <Property name="Location">12, 38</Property>
+      <Property name="Name">lblFolderPath</Property>
+      <Property name="Size">100, 23</Property>
+      <Property name="TabIndex">1</Property>
+      <Property name="Text">Folder Path:</Property>
+    </Object>
+    <Object type="System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="lblFolderName" children="Controls">
+      <Property name="Location">12, 9</Property>
+      <Property name="Name">lblFolderName</Property>
+      <Property name="Size">100, 23</Property>
+      <Property name="TabIndex">0</Property>
+      <Property name="Text">Folder Name:</Property>
+    </Object>
+  </Object>
+  <Object type="System.Windows.Forms.FolderBrowserDialog, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="folderbrowserdialog1" />
+  <Code><![CDATA[
+Import-Module ActiveDirectory
+
+# When the form loads populate the units combobox with all the units listed under ad.umn.edu/Clients/Units
+$OnLoadFormEvent={
+	# Define the location in AD we want to pull the units from
+	$ClientsUnitsOU = "OU=Units,OU=Clients,DC=ad,DC=umn,DC=edu"
+	
+	# Clear the combobox of any items that may be in it.
+	$cmbUnit.Items.Clear()
+	
+	# Get all the units from under ad.umn.edu/Clients/Units and add them to the combobox
+	$Units = Get-ADOrganizationalUnit -SearchBase $ClientsUnitsOU -SearchScope OneLevel -Filter * | % {$_.name}
+	Load-ComboBox -ComboBox $cmbUnit -Append -Items $Units
+	$btnCreateSharedFolder.Enabled = $false
+}
+
+
+#region Functions
+
+Function Write-Log {
+	<#
+		.SYNOPSIS
+			This function is used to pass messages to a ScriptLog.  It can also be leveraged for other purposes if more complex logging is required.
+		.DESCRIPTION
+			Write-Log function is setup to write to a log file in a format that can easily be read using CMTrace.exe. Variables are setup to adjust the output.
+		.PARAMETER Message
+			The message you want to pass to the log.
+		.PARAMETER Path
+			The full path to the script log that you want to write to.
+		.PARAMETER Severity
+			Manual indicator (highlighting) that the message being written to the log is of concern. 1 - No Concern (Default), 2 - Warning (yellow), 3 - Error (red).
+		.PARAMETER Component
+			Provide a non null string to explain what is being worked on.
+		.PARAMETER Context
+			Provide a non null string to explain why.
+		.PARAMETER Thread
+			Provide a optional thread number.
+		.PARAMETER Source
+			What was the root cause or action.
+		.PARAMETER Console
+			Adjusts whether output is also directed to the console window.
+		.NOTES
+			Name: Write-Log
+			Author: Aaron Miller
+			LASTEDIT: 01/23/2013 10:09:00
+		.EXAMPLE
+			Write-Log -Message $exceptionMsg -Path $ScriptLog -Severity 3
+			Writes the content of $exceptionMsg to the file at $ScriptLog and marks it as an error highlighted in red
+	#>
+
+	PARAM(
+		[Parameter(Mandatory=$True)][String]$Message,
+		[Parameter(Mandatory=$False)][String]$Path = "$env:TEMP\CMTrace.Log",
+		[Parameter(Mandatory=$False)][int]$Severity = 1,
+		[Parameter(Mandatory=$False)][string]$Component = " ",
+		[Parameter(Mandatory=$False)][string]$Context = " ",
+		[Parameter(Mandatory=$False)][string]$Thread = "1",
+		[Parameter(Mandatory=$False)][string]$Source = "",
+		[Parameter(Mandatory=$False)][switch]$Console
+	)
+			
+	# Setup the log message
+	$time = Get-Date -Format "HH:mm:ss.fff"
+	$date = Get-Date -Format "MM-dd-yyyy"
+	$LogMsg = '<![LOG['+$Message+']LOG]!><time="'+$time+'+000" date="'+$date+'" component="'+$Component+'" context="'+$Context+'" type="'+$Severity+'" thread="'+$Thread+'" file="'+$Source+'">'
+	
+	# Write out the log file using the ComObject Scripting.FilesystemObject
+	$ForAppending = 8
+	$FSO = New-Object -ComObject scripting.filesystemobject
+	$File = $FSO.OpenTextFile($Path, $ForAppending, $True)
+	$File.WriteLine($LogMsg)
+	$File.Close()
+	Remove-Variable FSO
+	Remove-Variable File
+	
+	# Write to the console if $Console is set to True
+	if ($Console -eq $True) {Write-Host $Message}	
+} # End Write-Log
+
+Function Write-Output {
+	<#
+	.SYNOPSIS
+		This function outputs to both the log file as well as the textbox in the GUI.
+
+	.DESCRIPTION
+		This function takes in a message and a path to a log file then writes the message to the log file using Write-Log and 
+
+	.PARAMETER  Message
+		The message you want to write.
+
+	.PARAMETER  Path
+		The path of the log file.
+	
+	#>
+	PARAM(
+		[Parameter(Mandatory=$True)][String]$Message,
+		[Parameter(Mandatory=$False)][String]$Path
+	)
+	
+	Write-Log -Message $Message -Path $Path
+	$txtOutput.AppendText($Message + [Environment]::NewLine)
+} # End Write-Output
+
+Function validGroup {
+<#
+	.SYNOPSIS
+		Returns true if a group exists.
+	
+	.PARAMETER groupName
+		The name of the group to check.
+#>
+	Param (
+		[Parameter(Mandatory=$True)]$groupName
+	)
+
+	try {
+		Get-ADGroup $groupName | Out-Null
+		return $true
+	}
+	catch {
+		return $false
+	}
+	
+} # End validGroup
+
+Function validOU {
+<#
+	.SYNOPSIS
+		Returns true if an OU exists.
+	
+	.PARAMETER distinguishedName
+		The distinguished name of the OU to check.
+#>
+	Param (
+		[Parameter(Mandatory=$True)]$distinguishedName
+	)
+
+	try {
+		Get-ADOrganizationalUnit $distinguishedName | Out-Null
+		return $true
+	}
+	catch {
+		return $false
+	}
+	
+} # End validOU
+
+Function validADObject {
+<#
+	.SYNOPSIS
+		Returns true if an AD object is valid on a specific domain controller.
+	
+	.PARAMETER objName
+		The AD object to check.
+	
+	.PARAMETER Server
+		The domain controller to check against.
+#>
+	Param (
+		[Parameter(Mandatory=$True)]
+		[string]$objName
+		,
+		[Parameter(Mandatory=$true)]
+		[string]$Server
+	)
+
+	try {
+		Get-ADObject -Filter {Name -eq $objName} -Server $server | Out-Null
+		return $true
+	}
+	catch {
+		return $false
+	}
+	
+} # End validADObject
+
+Function checkDCs {
+<#
+	.SYNOPSIS
+		Check's if an AD object exists on each domain controller within a domain.
+	
+	.DESCRIPTION
+		This can be used to verify that a newly created object has replicated to each
+		domain controller before proceeding with other actions.
+	
+	.PARAMETER ADObject
+		The AD object to check.
+	
+	.PARAMETER maxWait
+		The maximum time in seconds to wait.
+#>
+	Param (
+	[Parameter(Mandatory=$true)]
+	[string]$ADObject
+	,
+	[Parameter(Mandatory=$False)]
+	[int]$maxWait = 30
+	)
+	
+	$dcList = New-Object System.Collections.ArrayList
+	
+	$count = 1
+	
+	try {
+		# Get the list of domain controllers to check
+		Get-ADDomainController -Filter * | % {$dcList.Add($_.HostName)}
+		
+		while (($count -le $maxWait) -and ($dcList)) {
+		
+			$goodServers = New-Object System.Collections.ArrayList
+			
+			# Walk through each DC and identify the DC's that see the AD Object
+			$dcList | % {
+				
+				if(validADObject -objName $ADObject -Server $_) {
+					$goodServers.Add($_)
+				}
+			}
+			
+			# Remove the DC's that already see the AD object from the list of DC's to check
+			$goodServers | % {$dcList.Remove($_)}
+			
+			Start-Sleep -Seconds 1
+			
+			$count += 1
+		}
+		
+		# If there are still DC's to check then return false, otherwise each DC sees the AD object
+		if(!($dcList)) {
+			Return $true
+		}
+		else {
+			Return $false
+		}
+	}
+	catch {
+		throw
+	}
+} # End checkDCs
+
+Function Set-GroupManager {
+	<#
+		.Synopsis
+		   Sets manager property on AD group and grants change membership rights.
+		.DESCRIPTION
+		   Sets manager property on AD group and grants change membership rights.
+		   This is done by manipulating properties directly on the DirectoryEntry object
+		   obtained with ADSI. This sets the managedBy property and adds an ACE to the DACL
+		   allowing said manager to modify group membership.
+		   Taken from: https://www.bazaarbytes.com/blog/setting-ad-group-managers-with-powershell/
+		.EXAMPLE
+		   Set-GroupManager -ManagerDN "CN=some manager,OU=All Users,DC=Initech,DC=com" -GroupDN "CN=TPS Reports Dir,OU=All Groups,DC=Initech,DC=com"
+		.EXAMPLE
+		   (Get-AdGroup -Filter {Name -like "sharehost - *"}).DistinguishedName | % {Set-GroupManager "CN=some manager,OU=All Users,DC=Initech,DC=com" $_}
+	#>
+    param (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$false, ValueFromPipelinebyPropertyName=$True, Position=0)]
+        [string]$ManagerDN,
+        [Parameter(Mandatory=$true, ValueFromPipeline=$false, ValueFromPipelinebyPropertyName=$True, Position=1)]
+        [string]$GroupDN,
+		[Parameter(Mandatory=$true, ValueFromPipeline=$false, ValueFromPipelinebyPropertyName=$True, Position=1)]
+        [string]$targetDC
+        )
+    
+    try {
+ 
+        $mgr = [ADSI]"LDAP://$targetDC/$ManagerDN";
+        $identityRef = (Get-ADGroup -Filter {DistinguishedName -like $ManagerDN} -Server $targetDC).SID.Value
+        $sid = New-Object System.Security.Principal.SecurityIdentifier ($identityRef);
+ 
+        $adRule = New-Object System.DirectoryServices.ActiveDirectoryAccessRule ($sid, `
+                    [System.DirectoryServices.ActiveDirectoryRights]::WriteProperty, `
+                    [System.Security.AccessControl.AccessControlType]::Allow, `
+                    [Guid]"bf9679c0-0de6-11d0-a285-00aa003049e2");
+ 
+        $grp = [ADSI]"LDAP://$targetDC/$GroupDN";
+ 
+        # Taken from here: http://blogs.msdn.com/b/dsadsi/archive/2013/07/09/setting-active-directory-object-permissions-using-powershell-and-system-directoryservices.aspx
+        [System.DirectoryServices.DirectoryEntryConfiguration]$SecOptions = $grp.get_Options();
+        $SecOptions.SecurityMasks = [System.DirectoryServices.SecurityMasks]'Dacl'
+                
+        $grp.get_ObjectSecurity().AddAccessRule($adRule);
+        $grp.CommitChanges();
+    }
+    catch {
+        throw
+    }
+} # End Set-GroupManager
+
+Function Apply-SharedFolderPerms {
+<#
+	.SYNOPSIS
+		Apply modify and read permissions to groups on a folder. 
+	
+	.DESCRIPTION
+		If there is an error referencing 'SetAccessRule' then keep trying until it works or the maxWait 
+		time is reached. Errors referencing 'SetAccessRule' when applying permissions almost always mean 
+		that the file share can not yet enumerate one or more of the group names.  This can happen when 
+		groups are created via scripts.  The 'SetAccessRule' error message may be different in different 
+		languages.
+	
+	.PARAMETER pathName
+		The path of the folder to apply permissions to.
+	
+	.PARAMETER modifyName
+		The name of the group that gets modify rights.
+	
+	.PARAMETER readName
+		The name of the group that gets read rights.
+	
+	.PARAMETER domainName
+		The domain name with a '\' at the end. (for example: ad.umn.edu\)
+	
+	.PARAMETER maxWait
+		The maximum time in seconds to wait.
+#>
+	Param (
+	[Parameter(Mandatory=$true)]
+	[string]$pathName
+	,
+	[Parameter(Mandatory=$true)]
+	[string]$modifyName
+	,
+	[Parameter(Mandatory=$true)]
+	[string]$readName
+	,
+	[Parameter(Mandatory=$true)]
+	[string]$domainName
+	,
+	[Parameter(Mandatory=$False)]
+	[int]$maxWait = 30
+	)	
+	
+	$count = 1
+	$shareStatus = $false
+	
+	while (($count -le $maxWait) -and (!($shareStatus))) {
+		
+		try {
+			# Get the ACL of the folder
+			$acl =  [System.IO.Directory]::GetAccessControl($pathName)
+			
+			# Create the permission
+			$modPermission = "$domainName$modifyName","Modify","ContainerInherit,ObjectInherit","None","Allow"
+			$readPermission = "$domainName$readName","ReadAndExecute","ContainerInherit,ObjectInherit","None","Allow"
+
+			# Create the access rule
+			$modifyAccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule $modPermission
+			$readAccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule $readPermission
+
+			# Set the ACL
+			$acl.SetAccessRule($modifyAccessRule)
+			$acl.SetAccessRule($readAccessRule)
+			
+			# Apply the ACL to the folder
+			[System.IO.Directory]::SetAccessControl($pathName, $acl)
+			
+			$shareStatus = $true
+			$count += $maxWait
+		}
+		catch {
+			if ($_.Exception.Message -like "*SetAccessRule*") {
+				# Catch an error referencing 'SetAccessRule'.  This string may be different in different languages.
+				# Sleep 1 second then increment the counter to return to the while loop.
+				Start-Sleep -Seconds 1
+				$count += 1
+			}
+			else {
+				# This is a different error just throw it and exit the function
+				throw $_	
+			}
+		}
+	}
+	
+	if ($shareStatus) {
+		Return $true
+	}
+	else {
+		Return $false	
+	}
+} # End Apply-SharedFolderPerms
+
+Function Check-EmptyFields {
+<#
+.SYNOPSIS
+	Takes in an array of Windows.Form fields and returns true if all have valid strings as data
+	and false if any are empty strings.
+	
+.PARAMETER fieldArray
+	The array of Windows.Form fields.
+	
+#>	
+	Param (
+		[Parameter(Mandatory=$true)]
+		[array]$fieldArray
+	)
+	
+	# Assume every field will be valid
+	$fieldResults = $true
+	
+	ForEach ($field in $fieldArray) {
+		
+		$fieldName = $field.GetType().Name
+		
+		# Assume the current field is valid
+		$currentField = $true
+		
+		if ($fieldName -eq "ComboBox") {
+			$comboItem = $($field.SelectedItem)
+			if ($comboItem.length -eq 0) {
+				$currentField = $false	
+			}
+		}
+		elseif ($fieldName -eq "TextBox") {
+
+			if ($field.Text -eq "") {
+				$currentField = $false	
+			}
+		}
+		else {
+			#[void][reflection.assembly]::Load("System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")
+			[void][System.Windows.Forms.MessageBox]::Show("We should never get this... contact your system administrator!","FailureTown")
+		}
+		
+		if(($fieldResults) -and (!($currentField))) {
+			# The current field isn't valid so set the fieldResults to false, which will be returned
+			$fieldResults = $false	
+		}
+		
+	}
+	
+	Return $fieldResults
+} # Check-EmptyFields
+
+#endregion
+
+#region Control Helper Functions
+function Load-ComboBox 
+{
+<#
+	.SYNOPSIS
+		This functions helps you load items into a ComboBox.
+
+	.DESCRIPTION
+		Use this function to dynamically load items into the ComboBox control.
+
+	.PARAMETER  ComboBox
+		The ComboBox control you want to add items to.
+
+	.PARAMETER  Items
+		The object or objects you wish to load into the ComboBox's Items collection.
+
+	.PARAMETER  DisplayMember
+		Indicates the property to display for the items in this control.
+	
+	.PARAMETER  Append
+		Adds the item(s) to the ComboBox without clearing the Items collection.
+	
+	.EXAMPLE
+		Load-ComboBox $combobox1 "Red", "White", "Blue"
+	
+	.EXAMPLE
+		Load-ComboBox $combobox1 "Red" -Append
+		Load-ComboBox $combobox1 "White" -Append
+		Load-ComboBox $combobox1 "Blue" -Append
+	
+	.EXAMPLE
+		Load-ComboBox $combobox1 (Get-Process) "ProcessName"
+#>
+	Param (
+		[ValidateNotNull()]
+		[Parameter(Mandatory=$true)]
+		[System.Windows.Forms.ComboBox]$ComboBox,
+		[ValidateNotNull()]
+		[Parameter(Mandatory=$true)]
+		$Items,
+	    [Parameter(Mandatory=$false)]
+		[string]$DisplayMember,
+		[switch]$Append
+	)
+	
+	if(-not $Append)
+	{
+		$ComboBox.Items.Clear()	
+	}
+	
+	if($Items -is [Object[]])
+	{
+		$ComboBox.Items.AddRange($Items)
+	}
+	elseif ($Items -is [Array])
+	{
+		$ComboBox.BeginUpdate()
+		foreach($obj in $Items)
+		{
+			$ComboBox.Items.Add($obj)	
+		}
+		$ComboBox.EndUpdate()
+	}
+	else
+	{
+		$ComboBox.Items.Add($Items)	
+	}
+
+	$ComboBox.DisplayMember = $DisplayMember	
+}
+#endregion
+
+$btnFindFolderPath_Click={
+	$folderbrowserdialog1.ShowDialog()
+	$txtFolderPath.Text = $folderbrowserdialog1.SelectedPath
+}
+
+$btnCreateSharedFolder_Click={
+	
+	#[void][reflection.assembly]::Load("System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")
+	if(!([System.Windows.Forms.MessageBox]::Show("Are you sure you want to create the folder?", "Confirmation",[System.Windows.Forms.MessageBoxButtons]::YesNo) -eq "Yes"))
+	{
+		$txtOutput.Text = "No changes made."
+		return
+	}
+	
+	# Disable all the fields while the function processes
+	$txtFolderName.Enabled = $false
+	$txtFolderPath.Enabled = $false
+	$txtOutput.Enabled = $false
+	$txtSubUnit.Enabled = $false
+	$cmbUnit.Enabled = $false
+	$btnCreateSharedFolder.Enabled = $false
+	
+	#region variables
+	
+	$unitName = $($cmbUnit.SelectedItem)
+	
+	$folderName = $($txtFolderName.Text)
+	
+	$folderPath = $($txtFolderPath.Text)
+
+	$fullPath = $($txtFolderPath.Text) + '\' + $($txtFolderName.Text)
+	
+	$dateTime = Get-Date -uformat %Y%m%d-%H%M%S
+	
+	$logPath = $ScriptDirectory
+	
+	$logName = $logPath + '\' + "CMD-CSF-" + $unitName + "-" + $folderName + "_" + $dateTime + ".log"
+
+	$baseOUPath = "OU=Units,OU=Clients,DC=ad,DC=umn,DC=edu"
+
+	$unitOUPath = "OU=$unitName,$baseOUPath"
+
+	$fsOUPath = "OU=Fileshare,OU=Groups,$unitOUPath"
+
+	$mgOUPath = "OU=Management,OU=Groups,$unitOUPath"
+
+	if ($txtSubUnit.Text -ne "") {
+		$subUnitName = "$($txtSubUnit.Text)-"
+	}
+	else {
+		$subUnitName = ""	
+	}
+
+	$modifyGroupName = "$unitName-FS-$subUnitName$folderName-M"
+
+	$readGroupName = "$unitName-FS-$subUnitName$folderName-R"
+
+	$manageGroupName = "$unitName-FS-MGRS-$subUnitName$folderName"
+
+	$modifyDesc = "Modify to: $fullPath"
+
+	$readDesc = "Read only to: $fullPath"
+
+	$manageDesc = "Controls access to: $fullPath"
+
+	$domainController = (Get-ADDomainController).HostName
+
+	# The AD domain name
+	$domainName = "ad.umn.edu\"
+
+	#endregion
+
+	try {
+		# Log initial variables
+		Write-Output -Message "createSharedFolder started at: $dateTime with the following variables:" -Path $logName
+		Write-Output -Message "folderName: $folderName" -Path $logName
+		Write-Output -Message "folderPath: $($txtFolderPath.Text)" -Path $logName
+		Write-Output -Message "unit: $unitName" -Path $logName
+		Write-Output -Message "subUnit: $($txtSubUnit.Text)" -Path $logName
+	}
+	catch {
+		# We couldn't write to a logfile, we need to exit the script.
+		throw "Error! Script exiting: unable to write to $logName!!!"
+		Exit 666
+	}
+
+		#region validation
+
+		# Validate all variables
+		try {
+
+			if (!(Test-Path $folderPath)) {
+				
+				Write-Output -Message "Error: $folderPath does not exist." -Path $logName
+				Throw "The Folder Path you entered is not valid."	
+			}
+			
+			if (Test-Path $fullPath) {
+				
+				Write-Output -Message "Error: $fullPath exists." -Path $logName
+				Throw "$fullPath already exists; enter a different Folder Name or Folder Path."	
+			}
+			
+			if (!(validOU -distinguishedName $unitOUPath)) {
+			
+				Write-Output -Message "Error: $unitOUPath does not exist." -Path $logName
+				Throw "The Unit does not have a valid OU set up. Contact your system administrator."
+			}
+			
+			if (!(validOU -distinguishedName $fsOUPath)) {
+			
+				Write-Output -Message "Error: $fsOUPath does not exist." -Path $logName
+				Throw "The Unit does not have a valid OU for file share groups set up. Contact your system administrator."
+			}
+			
+			if (!(validOU -distinguishedName $mgOUPath)) {
+			
+				Write-Output -Message "Error: $mgOUPath does not exist." -Path $logName
+				Throw "The Unit does not have a valid OU for group management groups set up. Contact your system administrator."
+			}
+			
+			if (validGroup -groupName $modifyGroupName) {
+			
+				Write-Output -Message "Error: $modifyGroupName already exists." -Path $logName
+				Throw "There is already a group named: $modifyGroupName.  Choose a new Folder Name or rename the current group."
+			}
+			
+			if (validGroup -groupName $readGroupName) {
+			
+				Write-Output -Message "Error: $readGroupName already exists." -Path $logName
+				Throw "There is already a group named: $readGroupName.  Choose a new Folder Name or rename the current group."
+			}
+			
+			if (validGroup -groupName $manageGroupName) {
+			
+				Write-Output -Message "Error: $manageGroupName already exists." -Path $logName
+				Throw "There is already a group named: $manageGroupName.  Choose a new Folder Name or rename the current group."
+			}
+		}
+		catch {
+			# A variable wasn't validated, we need to exit the script.
+			Write-Output -Message "Error! Error message to follow:" -Path $logName
+			Write-Output -Message $_.Exception.Message.ToString() -Path $logName
+			
+			# Enable all the fields before we return
+			$txtFolderName.Enabled = $true
+			$txtFolderPath.Enabled = $true
+			$txtOutput.Enabled = $true
+			$txtSubUnit.Enabled = $true
+			$cmbUnit.Enabled = $true
+			$btnCreateSharedFolder.Enabled = $true
+		
+			Return
+		}
+		#endregion
+
+		try {
+			# Create the folder
+			New-Item -Path $folderPath -Name $folderName -Type Directory -Force | Out-Null
+			Write-Output -Message "Created $fullPath" -Path $logName
+		}
+		catch {
+			# We couldn't create the new folder, we need to output the error and stop the function
+			Write-Output -Message "There was a problem creating: $fullPath" -Path $logName
+			Write-Output -Message "Error message to follow:" -Path $logName
+			Write-Output -Message $_.Exception.Message.ToString() -Path $logName
+			
+			# Enable all the fields before we return
+			$txtFolderName.Enabled = $true
+			$txtFolderPath.Enabled = $true
+			$txtOutput.Enabled = $true
+			$txtSubUnit.Enabled = $true
+			$cmbUnit.Enabled = $true
+			$btnCreateSharedFolder.Enabled = $true
+		
+			Return
+		}
+
+		try {
+			# Create AD Groups
+			New-ADGroup -Name $manageGroupName -Path $mgOUPath -Description $manageDesc -GroupScope Global -Server $domainController
+			Write-Output -Message "Created group to control access: $manageGroupName" -Path $logName
+			
+			New-ADGroup -Name $modifyGroupName -Path $fsOUPath -Description $modifyDesc -GroupScope Global -Server $domainController -ManagedBy $manageGroupName
+			Write-Output -Message "Created group for modify access: $modifyGroupName" -Path $logName
+			
+			New-ADGroup -Name $readGroupName -Path $fsOUPath -Description $readDesc -GroupScope Global -Server $domainController -ManagedBy $manageGroupName
+			Write-Output -Message "Created group for read access: $readGroupName" -Path $logName
+		
+			$managerDName = (Get-ADGroup $manageGroupName -Server $domainController).DistinguishedName
+			$modifyDName = (Get-ADGroup $modifyGroupName -Server $domainController).DistinguishedName
+			$readDName = (Get-ADGroup $readGroupName -Server $domainController).DistinguishedName
+			
+			# Check the Manager can update membership list check-box for the modify and read groups
+			Set-GroupManager -ManagerDN $managerDName -GroupDN $modifyDName -targetDC $domainController
+			Write-Output -Message "Checked the Manager can update membership list check-box for: $modifyGroupName" -Path $logName
+			Set-GroupManager -ManagerDN $managerDName -GroupDN $readDName -targetDC $domainController
+			Write-Output -Message "Checked the Manager can update membership list check-box for: $readGroupName" -Path $logName
+						
+			# Verify that all created groups have propagated to all Domain Controllers
+			if (checkDCs -ADObject $manageGroupName) {
+				Write-Output -Message "Verified that $manageGroupName has propagated to all Domain Controllers" -Path $logName
+			}
+			else {
+				Write-Output -Message "Unable to verify that $manageGroupName has propagated to all Domain Controllers... continuing anyways." -Path $logName
+			}
+			
+			if (checkDCs -ADObject $modifyGroupName) {
+				Write-Output -Message "Verified that $modifyGroupName has propagated to all Domain Controllers" -Path $logName
+			}
+			else {
+				Write-Log -Message "Unable to verify that $modifyGroupName has propagated to all Domain Controllers... continuing anyways." -Path $logName
+			}
+			
+			if (checkDCs -ADObject $readGroupName) {
+				Write-Output -Message "Verified that $readGroupName has propagated to all Domain Controllers" -Path $logName
+			}
+			else {
+				Write-Output -Message "Unable to verify that $readGroupName has propagated to all Domain Controllers... continuing anyways." -Path $logName
+			}
+			
+			# Apply permissions to the folder
+			if (Apply-SharedFolderPerms -domainName $domainName -modifyName $modifyGroupName -readName $readGroupName -pathName $fullPath) {
+				Write-Output -Message "ACLs successfully applied to the folder." -Path $logName
+			}
+			else {
+				Write-Output -Message "Error writing ACLs to $fullPath" -Path $logName
+				Throw "Error writing ACLs. Most likely group object creation did not propagate to the file share."
+			}
+
+		}
+		catch {
+			# There was a problem with the script, we need output the error and stop the function
+			Write-Output -Message "There was a problem creating groups or applying permissions!" -Path $logName
+			Write-Output -Message "Error message to follow:" -Path $logName
+			Write-Output -Message $_.Exception.Message.ToString() -Path $logName
+			
+			# Enable all the fields before we return
+			$txtFolderName.Enabled = $true
+			$txtFolderPath.Enabled = $true
+			$txtOutput.Enabled = $true
+			$txtSubUnit.Enabled = $true
+			$cmbUnit.Enabled = $true
+			$btnCreateSharedFolder.Enabled = $true
+		
+			Return
+		}
+
+		#endregion	
+	
+	# End of the function, enable all the fields again
+	$txtFolderName.Enabled = $true
+	$txtFolderPath.Enabled = $true
+	$txtOutput.Enabled = $true
+	$txtSubUnit.Enabled = $true
+	$cmbUnit.Enabled = $true
+	$btnCreateSharedFolder.Enabled = $true
+}
+
+# check for changed text in the FolderName field
+$txtFolderName_TextChanged={
+
+	$fArray = @($txtFolderName,$cmbUnit,$txtFolderPath)
+	if(Check-EmptyFields -fieldArray $fArray) {
+		$btnCreateSharedFolder.Enabled = $true	
+	}
+}
+
+# check for changed text in the FolderPath field
+$txtFolderPath_TextChanged={
+
+	$fArray = @($txtFolderName,$cmbUnit,$txtFolderPath)
+	if(Check-EmptyFields -fieldArray $fArray) {
+		$btnCreateSharedFolder.Enabled = $true	
+	}
+}
+
+# check for changed text in the CmbUnit field
+$cmbUnit_SelectedIndexChanged={
+
+	$fArray = @($txtFolderName,$cmbUnit,$txtFolderPath)
+	if(Check-EmptyFields -fieldArray $fArray) {
+		$btnCreateSharedFolder.Enabled = $true	
+	}
+}
+]]></Code>
+  <Mode>1</Mode>
+  <Assemblies>
+    <Assembly>System.Management.Automation, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35</Assembly>
+    <Assembly>System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+    <Assembly>System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+    <Assembly>System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <Assembly>mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+    <Assembly>System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+    <Assembly>System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+    <Assembly>System.DirectoryServices, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+  </Assemblies>
+  <Packager>
+    <General>
+      <PackageName>CreateSharedFolder</PackageName>
+      <PackageIcon>
+      </PackageIcon>
+      <ManifestCreation>1</ManifestCreation>
+      <CustomManifest>
+      </CustomManifest>
+      <Platform>3</Platform>
+      <RunSTA>1</RunSTA>
+      <PowerShellVersion>3</PowerShellVersion>
+    </General>
+    <Security>
+      <Username>
+      </Username>
+      <Password>
+      </Password>
+      <SignPackage>False</SignPackage>
+      <Certificate>
+      </Certificate>
+      <CertificatePassword>
+      </CertificatePassword>
+      <RunAs>0</RunAs>
+    </Security>
+    <Version>
+      <FileVersion>1.0.0.0</FileVersion>
+      <ProductVersion>1.0.0.0</ProductVersion>
+      <ProductName>
+      </ProductName>
+      <Description>
+      </Description>
+      <Company>
+      </Company>
+      <Copyright>
+      </Copyright>
+      <InternalName>
+      </InternalName>
+      <OriginalFileName>
+      </OriginalFileName>
+      <Comment>
+      </Comment>
+    </Version>
+  </Packager>

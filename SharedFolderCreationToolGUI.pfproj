@@ -1,0 +1,53 @@
+﻿<Project>
+  <Version>1</Version>
+  <FileID>4d889d72-054f-49c3-8c20-0e07f25a2042</FileID>
+  <ProjectType>0</ProjectType>
+  <Files>
+    <File ReferenceName="" Build="0">Startup.pfs</File>
+    <File ReferenceName="Call-MainForm_pff" Build="0">MainForm.pff</File>
+    <File ReferenceName="Call-Global_ps1" Build="0" CommandExtension="True">Globals.ps1</File>
+  </Files>
+  <Packager>
+    <General>
+      <PackageName>Create-SharedFolder</PackageName>
+      <PackageIcon>
+      </PackageIcon>
+      <ManifestCreation>1</ManifestCreation>
+      <CustomManifest>
+      </CustomManifest>
+      <Platform>3</Platform>
+      <RunSTA>0</RunSTA>
+      <PowerShellVersion>3</PowerShellVersion>
+    </General>
+    <Security>
+      <Username>
+      </Username>
+      <Password>
+      </Password>
+      <SignPackage>False</SignPackage>
+      <Certificate>
+      </Certificate>
+      <CertificatePassword>
+      </CertificatePassword>
+      <RunAs>0</RunAs>
+    </Security>
+    <Version>
+      <FileVersion>1.0.0.0</FileVersion>
+      <ProductVersion>1.0.0.0</ProductVersion>
+      <ProductName>
+      </ProductName>
+      <Description>
+      </Description>
+      <Company>
+      </Company>
+      <Copyright>
+      </Copyright>
+      <InternalName>
+      </InternalName>
+      <OriginalFileName>
+      </OriginalFileName>
+      <Comment>
+      </Comment>
+    </Version>
+  </Packager>
+</Project>
